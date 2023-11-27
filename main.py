@@ -1,5 +1,6 @@
 from handcalcs.decorator import handcalc
 import forallpeople as si
+import math
 
 @handcalc()
 def debit(area: float, n: float, ir=float) -> float:
@@ -10,7 +11,7 @@ def debit(area: float, n: float, ir=float) -> float:
     """
     ir=5*10**-5
     Qhi = (area * ir) / n
-    return round(Qhi,3)
+    return Qhi
 
 
 @handcalc()
@@ -52,36 +53,42 @@ def d_sloped(dhw:float,al:float)-> float:
     d_sloped=dhw-0.5*al
     return d_sloped
 
-from typing import Optional
-
-def calculate_ligger_properties(roof_type: str, dhw: float, al: Optional[float] = 0, z: float = 0) -> float:
-    if roof_type == "flat roof":
-        # Flat roof logic
-        d = dhw
-    elif roof_type == "curved":
-        # Curved logic
-        d = dhw - 0.8 * z
-    elif roof_type == "sloped":
-        # Sloped logic
-        if dhw > al:
-            d = dhw - 0.5 * al
-        else:
-            z = 0
-            x = 1 - ((dhw - 0.8 * z) / al)
-            c = 0.5 - 0.3 * x**2 - 0.2 * x**3
-            d = d_hw - c * al
-    elif roof_type == "curved and sloped":
-        # Curved and sloped logic
-        if dhw > al:
-            d = dhw - 0.8 * z - 0.5 * al
-        else:
-            x = 1 - ((dhw - 0.8 * z) / al)
-            c = 0.5 - 0.3 * x**2 - 0.2 * x**3
-            d = dhw - 0.8 * z - 0.5 * c * al
-    else:
-        raise ValueError("Invalid roof_type value")
-
+@handcalc()
+def flat_roof(dhw: float) -> float:
+    d = dhw
     return d
 
+@handcalc()
+def curved_roof(dhw: float, z: float) -> float:
+    d = dhw - 0.8 * z
+    return d
 
+@handcalc()
+def sloped_roof_bi_al(dhw: float, al: float, z: float) -> float:
+    d = dhw - 0.5 * al
+    return d
 
+@handcalc()
+def sloped_roof_sm_al(dhw: float, al: float, z: float) -> float:
+    z = 0
+    x = 1 - ((dhw - 0.8 * z) / al)
+    c = 0.5 - 0.3 * x**2 - 0.2 * x**3
+    d = dhw - c * al
+    return d
+
+@handcalc()
+def curved_and_sloped_roof_bi_al(dhw: float, al: float, z: float) -> float:
+    d = dhw - 0.8 * z - 0.5 * al
+    return d
+
+@handcalc()
+def curved_and_sloped_roof_sm_al(dhw: float, al: float, z: float) -> float:
+    x = 1 - ((dhw - 0.8 * z) / al)
+    c = 0.5 - 0.3 * x**2 - 0.2 * x**3
+    d = dhw - 0.8 * z - 0.5 * c * al
+    return d
+
+@handcalc()
+def critical_stifness(y_rep:float,hoh:float,l:float,fac:float)-> float:
+    EI_cr=fac * y_rep * hoh * l**4 /((math.pi**4)*10**9)
+    return EI_cr
