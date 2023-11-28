@@ -89,6 +89,24 @@ def curved_and_sloped_roof_sm_al(dhw: float, al: float, z: float) -> float:
     return d
 
 @handcalc()
-def critical_stifness(y_rep:float,hoh:float,l:float,fac:float)-> float:
-    EI_cr=fac * y_rep * hoh * l**4 /((math.pi**4)*10**9)
+def critical_stifness(fac: float,hoh: float,l: float,y_rep:float=10)-> float:
+    EI_cr=((y_rep * fac * hoh * l**4 )/(math.pi**4))*10**9
     return EI_cr
+
+@handcalc()
+def mult_factor(I_y:float,y_m:float,EI_cr:float,E:float=21000)->float:
+    n= (E * I_y*10**4)/(y_m * EI_cr)
+    return n
+
+@handcalc()
+def N_factor(n: float) -> float:
+    N= n / (n - 1)
+    return N
+
+# Handle the special case where n is equal to 1
+def calculate_N_factor(n: float) -> float:
+    if n == 1:
+        return float('inf')  # or any other value you prefer
+    else:
+        return N_factor(n)
+

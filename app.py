@@ -12,6 +12,8 @@ from main import sloped_roof_sm_al
 from main import curved_and_sloped_roof_bi_al
 from main import curved_and_sloped_roof_sm_al
 from main import critical_stifness
+from main import mult_factor
+from main import N_factor
 
 st.header("roof overflow design for steel roofs")
 
@@ -58,6 +60,47 @@ dhw=Dndi+hnd
 equload_latex,equload_value=equivalent_load(dhw)
 st.write("equivalent load in kN/m^2 ")
 st.latex(equload_latex) 
+
+roof_types = ["flat roof", "curved", "sloped", "curved and sloped"]
+selected_roof = st.sidebar.selectbox("Select Beam Type:", roof_types)
+roof_type=selected_roof
+# Conditional input fields based on roof type
+if selected_roof == "curved" or selected_roof == "curved and sloped":
+    z_value = st.sidebar.number_input("curvature value Z in mm:", min_value=0.0)
+else:
+    z_value = None
+
+if selected_roof == "sloped" or selected_roof == "curved and sloped":
+    al_value = st.sidebar.number_input("slope value  al in mm at end of beam:", min_value=0.0)
+else:
+    al_value = None
+
+al=al_value
+z=z_value
+
+if roof_type == "flat roof":
+    result = flat_roof(dhw)
+elif roof_type == "curved":
+    result = curved_roof(dhw, z)
+elif roof_type == "sloped":
+    if dhw > al:
+        result = sloped_roof_bi_al(dhw, al, z)
+    else:
+        result = sloped_roof_sm_al(dhw, al, z)
+elif roof_type == "curved and sloped":
+    if dhw > al:
+        result = curved_and_sloped_roof_bi_al(dhw, al, z)
+    else:
+        result = curved_and_sloped_roof_sm_al(dhw, al, z)
+else:
+    raise ValueError("Invalid roof_type value")
+d_value=result
+
+d_value_latex,d_value=result
+st.write("reduced waterheight d in  mm ")
+st.latex(d_value_latex)
+
+
 import plotly.graph_objects as go
 fig=go.Figure()
 fig.add_trace(go.Scatter(x=[0,70,70,100,100,0], y=[0,0,hnd,hnd,dhw,dhw], fill="toself",fillcolor="lightblue", line=dict(color="lightblue"),showlegend=False))
@@ -125,81 +168,43 @@ with open('merged_output.json') as f:
 # Extract beam types from the keys of the loaded data
 beam_types = list(data.keys())
 
-# Display a selectbox for beam type selection
-#selected_beam = st.sidebar.selectbox("Select Beam Type:", beam_types)
-
 st.sidebar.header("beam setup")
 # List of roof types
-roof_types = ["flat roof", "curved", "sloped", "curved and sloped"]
-
-# Display a selectbox for roof type selection
-selected_roof = st.sidebar.selectbox("Select Beam Type:", roof_types)
-roof_type=selected_roof
-# Conditional input fields based on roof type
-if selected_roof == "curved" or selected_roof == "curved and sloped":
-    z_value = st.sidebar.number_input("curvature value Z in mm:", min_value=0.0)
-else:
-    z_value = None
-
-if selected_roof == "sloped" or selected_roof == "curved and sloped":
-    al_value = st.sidebar.number_input("slope value  al in mm at end of beam:", min_value=0.0)
-else:
-    al_value = None
-
-al=al_value
-z=z_value
-
-
-
-if roof_type == "flat roof":
-    result = flat_roof(dhw)
-elif roof_type == "curved":
-    result = curved_roof(dhw, z)
-elif roof_type == "sloped":
-    if dhw > al:
-        result = sloped_roof_bi_al(dhw, al, z)
-    else:
-        result = sloped_roof_sm_al(dhw, al, z)
-elif roof_type == "curved and sloped":
-    if dhw > al:
-        result = curved_and_sloped_roof_bi_al(dhw, al, z)
-    else:
-        result = curved_and_sloped_roof_sm_al(dhw, al, z)
-else:
-    raise ValueError("Invalid roof_type value")
-d_value=result
-
-d_value_latex,d_value=result
-st.write("reduced waterheight d in  mm ")
-st.latex(d_value_latex)
+selected_beam = st.sidebar.selectbox("Select beam:", beam_types)
+selected_Iy = data[selected_beam]["Iy"]
+I_y=selected_Iy
+l=st.sidebar.number_input("l in m", 1)
+hoh=st.sidebar.number_input("h.o.h. in m",1)
 
 # List of roof types
 roof_stifness = ["simply supported", "one side semi fixed", "one side fully fixed", "two sides semi fixed","two sides fully fixed"]
 
 # Display a selectbox for roof type selection
-selected_stifness = st.sidebar.selectbox("Select Beam Type:", roof_stifness)
+selected_stifness = st.sidebar.selectbox("Select support Type:", roof_stifness)
 stiff_type=selected_stifness
 
-if selected_stifness ==" simply supported":
-    fac=1
-elif selected_stifness =="one side semi fixed":
-    fac=0.7
-elif selected_stifness =="one side fully fixed":
-    fac=0.4
-elif selected_stifness =="two sides semi fixed":
-    fac=0.4
-elif selected_stifness =="two sides fully fixed":
-    fac=0.2   
+if selected_stifness == "simply supported":
+    fac = 1
+elif selected_stifness == "one side semi fixed":
+    fac = 0.7
+elif selected_stifness == "one side fully fixed":
+    fac = 0.4
+elif selected_stifness == "two sides semi fixed":
+    fac = 0.4
+elif selected_stifness == "two sides fully fixed":
+    fac = 0.2
+else:
+    raise ValueError("Invalid roof_type value")
+y_rep=10
+critical_stifness_latex,critical_stifness_value=critical_stifness(fac,hoh,l,y_rep)
+st.write("critical stifness")
+st.latex(critical_stifness_latex)
+E=210000
+y_m=1.3
+mult_factor_latex,mult_factor_value=mult_factor(I_y,y_m,critical_stifness_value,E)
+st.write("multiplication factor")
+st.latex(mult_factor_latex)
 
-# Arrange them horizontally using columns
-col1, col2, col3 = st.columns(3)
+N_factor_latex,N_factor_value=N_factor(mult_factor_value)
+st.latex(N_factor_latex)
 
-# Place each input field in a separate column without extra rows
-with col2:
-    input1=st.text_input("l in m", value="1")
-
-with col1:
-    selected_beam = st.selectbox("Select Beam Type:", beam_types)
-
-with col3:
-    input2=st.text_input("h.o.h. in m", value="1")
