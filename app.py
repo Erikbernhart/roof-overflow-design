@@ -1,104 +1,80 @@
 import streamlit as st
 import json
-from main import debit
-from main import waterheight
-from main import water_above_roof
-from main import critical_height
-from main import equivalent_load
-from main import flat_roof
-from main import curved_roof
-from main import sloped_roof_bi_al
-from main import sloped_roof_sm_al
-from main import curved_and_sloped_roof_bi_al
-from main import curved_and_sloped_roof_sm_al
-from main import critical_stifness
-from main import mult_factor
-from main import N_factor
+import plotly.graph_objects as go
+from main import (
+    debit,
+    waterheight,
+    water_above_roof,
+    critical_height,
+    equivalent_load,
+    flat_roof,
+    curved_roof,
+    sloped_roof_bi_al,
+    sloped_roof_sm_al,
+    curved_and_sloped_roof_bi_al,
+    curved_and_sloped_roof_sm_al,
+    critical_stifness,
+    mult_factor,
+    N_factor,
+    factored_equivalent_load,
+)
 
-st.header("roof overflow design for steel roofs")
+# Streamlit layout
+st.header("Water Overflow Design for Steel Roofs")
+st.divider()
+st.subheader("Calculation Program for Designing Roof Water Overflows According to NPR6703:2006 'Water Accumulation'")
+st.divider()
 
-st.sidebar.header("roof overflow")
+st.sidebar.header("Roof Overflow")
 
-area_value = st.sidebar.number_input("roof area in (m^2)",50)
-n_value = st.sidebar.number_input("number of water overflows",1)
+# Input values
+area_value = st.sidebar.number_input("Roof Area (m²)", 50,format='%d')
+n_value = st.sidebar.number_input("Number of Water Overflows", 1)
 
-Area = area_value 
+# Assign input values
+Area = area_value
+n = n_value
 
-n = n_value 
-
+st.write(f"Area:{area_value}m²")
+st.write(f"Number of overflows per Area:{n_value}")
+# Calculate water debit
 debit_latex, debit_value = debit(Area, n)
-st.write(" water debit in m^3/s")
+st.write("Water debit (m³/s)")
 st.latex(debit_latex)
 
-height_A_value=st.sidebar.number_input("height start of overflow above roof (mm)",30)
-width_value = st.sidebar.number_input("width of overflow (mm)",200)
-height_value = st.sidebar.number_input("height of overflow in (mm) ",20)
+# Water height calculations
+height_A_value = st.sidebar.number_input("Height Start of Overflow Above Roof (mm)", 30)
+width_value = st.sidebar.number_input("Width of Overflow (mm)", 200)
+height_value = st.sidebar.number_input("Height of Overflow (mm)", 20)
 
-width_overload=width_value
-height_aboveroof=height_A_value
-Qhi=debit_value
-height_of_overload=height_value
+width_overflow = width_value
+height_above_roof = height_A_value
+Qhi = debit_value
+height_of_overflow = height_value
 
-dndi_latex, dndi_value= waterheight(width_overload,Qhi)
-st.write("waterheight in mm")
+# Water height and critical height calculations
+dndi_latex, dndi_value = waterheight(width_overflow, Qhi)
+st.write("Water Height (mm)")
 st.latex(dndi_latex)
-Dndi=dndi_value
-dhw_latex,dhw_value=water_above_roof(Dndi,height_aboveroof)
-st.write("total height in mm")
+
+Dndi = dndi_value
+dhw_latex, dhw_value = water_above_roof(Dndi, height_above_roof)
+st.write("Total Height (mm)")
 st.latex(dhw_latex)
-hcrit_latex,hcrit_value=critical_height(height_aboveroof,height_of_overload)
-st.write("critical waterheight in mm ")
+
+hcrit_latex, hcrit_value = critical_height(height_above_roof, height_of_overflow)
+st.write("Critical Water Height (mm)")
 st.latex(hcrit_latex)
 
-hcrit=height_aboveroof+height_of_overload-30
+# Additional calculations
+hcrit = height_above_roof + height_of_overflow - 30
+ho = height_value
+hnd = height_A_value
+dhw = Dndi + hnd
+equload_latex, equload_value = equivalent_load(dhw)
+st.write("Equivalent Load (kN/m²)")
+st.latex(equload_latex)
 
-
-
-ho=height_value
-hnd=height_A_value
-dhw=Dndi+hnd
-equload_latex,equload_value=equivalent_load(dhw)
-st.write("equivalent load in kN/m^2 ")
-st.latex(equload_latex) 
-
-roof_types = ["flat roof", "curved", "sloped", "curved and sloped"]
-selected_roof = st.sidebar.selectbox("Select Beam Type:", roof_types)
-roof_type=selected_roof
-# Conditional input fields based on roof type
-if selected_roof == "curved" or selected_roof == "curved and sloped":
-    z_value = st.sidebar.number_input("curvature value Z in mm:", min_value=0.0)
-else:
-    z_value = None
-
-if selected_roof == "sloped" or selected_roof == "curved and sloped":
-    al_value = st.sidebar.number_input("slope value  al in mm at end of beam:", min_value=0.0)
-else:
-    al_value = None
-
-al=al_value
-z=z_value
-
-if roof_type == "flat roof":
-    result = flat_roof(dhw)
-elif roof_type == "curved":
-    result = curved_roof(dhw, z)
-elif roof_type == "sloped":
-    if dhw > al:
-        result = sloped_roof_bi_al(dhw, al, z)
-    else:
-        result = sloped_roof_sm_al(dhw, al, z)
-elif roof_type == "curved and sloped":
-    if dhw > al:
-        result = curved_and_sloped_roof_bi_al(dhw, al, z)
-    else:
-        result = curved_and_sloped_roof_sm_al(dhw, al, z)
-else:
-    raise ValueError("Invalid roof_type value")
-d_value=result
-
-d_value_latex,d_value=result
-st.write("reduced waterheight d in  mm ")
-st.latex(d_value_latex)
 
 
 import plotly.graph_objects as go
@@ -160,6 +136,48 @@ fig.update_yaxes(showline=True, showticklabels=True, side="right")  # Show y-axi
 fig.layout.height = 600
 fig.layout.width = 600
 fig
+st.divider()
+st.subheader("Reduced waterheight based on roof type ")
+# Roof type selection
+roof_types = ["Flat Roof", "Curved", "Sloped", "Curved and Sloped"]
+selected_roof = st.sidebar.selectbox("Select Roof Type:", roof_types)
+roof_type = selected_roof.lower()
+
+# Conditional input fields based on roof type
+if "curved" in roof_type:
+    z_value = st.sidebar.number_input("Curvature Value Z (mm):", min_value=0.0)
+    st.write(f"Curved roof, curvature:  {z_value}mm ")
+else:
+    z_value = None
+
+if "sloped" in roof_type:
+    al_value = st.sidebar.number_input("Slope Value Al (mm at end of beam):", min_value=0.0)
+    st.write(f"Sloped roof,  slope: {al_value}mm ")
+else:
+    al_value = None
+
+al = al_value
+z = z_value
+
+# Roof type calculations
+if roof_type == "flat roof":
+    result = flat_roof(dhw)
+elif roof_type == "curved":
+    result = curved_roof(dhw, z)
+elif roof_type == "sloped":
+    result = sloped_roof_bi_al(dhw, al, z) if dhw > al else sloped_roof_sm_al(dhw, al, z)
+elif roof_type == "curved and sloped":
+    result = curved_and_sloped_roof_bi_al(dhw, al, z) if dhw > al else curved_and_sloped_roof_sm_al(dhw, al, z)
+else:
+    raise ValueError("Invalid roof_type value")
+
+d_value_latex, d_value = result
+st.write("Reduced Water Height d (mm)")
+st.latex(d_value_latex)
+
+# Additional calculations for critical stiffness
+st.divider()
+st.subheader("Calculation of the Critical Stiffness to determine the additional water load")
 
 # Load data from the merged_output.json file
 with open('merged_output.json') as f:
@@ -168,43 +186,45 @@ with open('merged_output.json') as f:
 # Extract beam types from the keys of the loaded data
 beam_types = list(data.keys())
 
-st.sidebar.header("beam setup")
-# List of roof types
-selected_beam = st.sidebar.selectbox("Select beam:", beam_types)
+st.sidebar.header("Beam Setup")
+
+# Select beam type
+selected_beam = st.sidebar.selectbox("Select Beam:", beam_types)
 selected_Iy = data[selected_beam]["Iy"]
-I_y=selected_Iy
-l=st.sidebar.number_input("l in m", 1)
-hoh=st.sidebar.number_input("h.o.h. in m",1)
+I_y = selected_Iy
+l = st.sidebar.number_input("Length (m)", 1)
+hoh = st.sidebar.number_input("h.o.h. (m)", 1)
 
-# List of roof types
-roof_stifness = ["simply supported", "one side semi fixed", "one side fully fixed", "two sides semi fixed","two sides fully fixed"]
+# Select support type
+roof_stiffness = ["Simply Supported", "One Side Semi Fixed", "One Side Fully Fixed", "Two Sides Semi Fixed", "Two Sides Fully Fixed"]
+selected_stiffness = st.sidebar.selectbox("Select Support Type:", roof_stiffness)
+stiff_type = selected_stiffness.lower()
 
-# Display a selectbox for roof type selection
-selected_stifness = st.sidebar.selectbox("Select support Type:", roof_stifness)
-stiff_type=selected_stifness
-
-if selected_stifness == "simply supported":
+# Calculate critical stiffness
+if stiff_type == "simply supported":
     fac = 1
-elif selected_stifness == "one side semi fixed":
+elif stiff_type in ["one side semi fixed", "two sides semi fixed"]:
     fac = 0.7
-elif selected_stifness == "one side fully fixed":
+elif stiff_type in ["one side fully fixed", "two sides fully fixed"]:
     fac = 0.4
-elif selected_stifness == "two sides semi fixed":
-    fac = 0.4
-elif selected_stifness == "two sides fully fixed":
-    fac = 0.2
 else:
-    raise ValueError("Invalid roof_type value")
-y_rep=10
-critical_stifness_latex,critical_stifness_value=critical_stifness(fac,hoh,l,y_rep)
-st.write("critical stifness")
-st.latex(critical_stifness_latex)
-E=210000
-y_m=1.3
-mult_factor_latex,mult_factor_value=mult_factor(I_y,y_m,critical_stifness_value,E)
-st.write("multiplication factor")
+    raise ValueError("Invalid stiff_type value")
+
+y_rep = 10
+critical_stiffness_latex, critical_stiffness_value = critical_stifness(fac, hoh, l, y_rep)
+st.write("Critical Stiffness")
+st.latex(critical_stiffness_latex)
+
+# Additional calculations
+E = 210000
+y_m = 1.3
+mult_factor_latex, mult_factor_value = mult_factor(I_y, y_m, critical_stiffness_value, E)
+st.write("Multiplication Factor")
 st.latex(mult_factor_latex)
 
-N_factor_latex,N_factor_value=N_factor(mult_factor_value)
+N_factor_latex, N_factor_value = N_factor(mult_factor_value)
 st.latex(N_factor_latex)
 
+factored_equivalent_load_latex, factored_equivalent_load_value = factored_equivalent_load(d_value, N_factor_value)
+st.write("Factored Equivalent Load (kN/m²)")
+st.latex(factored_equivalent_load_latex)
