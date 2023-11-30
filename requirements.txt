@@ -1,2 +1,3 @@
 streamlit
 pfse_starterkit
+plotly
