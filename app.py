@@ -139,6 +139,8 @@ fig
 st.divider()
 st.subheader("Reduced waterheight based on roof type ")
 # Roof type selection
+
+st.sidebar.header("Roof type")
 roof_types = ["Flat Roof", "Curved", "Sloped", "Curved and Sloped"]
 selected_roof = st.sidebar.selectbox("Select Roof Type:", roof_types)
 roof_type = selected_roof.lower()
@@ -186,11 +188,13 @@ with open('merged_output.json') as f:
 # Extract beam types from the keys of the loaded data
 beam_types = list(data.keys())
 
+
 st.sidebar.header("Beam Setup")
 
 # Select beam type
 selected_beam = st.sidebar.selectbox("Select Beam:", beam_types)
 selected_Iy = data[selected_beam]["Iy"]
+st.write(f"Beam {selected_beam} is Iy: {selected_Iy}m⁴")
 I_y = selected_Iy
 l = st.sidebar.number_input("Length (m)", 1)
 hoh = st.sidebar.number_input("h.o.h. (m)", 1)
