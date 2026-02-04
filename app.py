@@ -25,20 +25,32 @@ def fix_latex(latex_str):
     if latex_str is None:
         return latex_str
     
+    # Debug: show what we received
+    st.write(f"DEBUG - Type: {type(latex_str)}")
+    st.write(f"DEBUG - First 200 chars: {str(latex_str)[:200]}")
+    
+    # Convert to string if needed
+    latex_str = str(latex_str)
+    
     # Fix \& to & for alignment
     latex_str = latex_str.replace(r'\&', '&')
-    
-    # Fix semicolons followed by backslash (handcalcs uses ; \ for line breaks)
-    latex_str = latex_str.replace(r' ; \ ', r' \\ ')
-    
-    # Remove trailing \ before \end{aligned}
-    latex_str = latex_str.replace(r' \ \end{aligned}', r' \end{aligned}')
     
     # Fix math.pi references  
     latex_str = latex_str.replace(r'\mathrm{math.pi}', r'\pi')
     latex_str = latex_str.replace(r'math.pi', r'\pi')
     
+    # handcalcs uses ; \ as separator between equations - replace with \\
+    latex_str = latex_str.replace(r' ; \ ', r' \\ ')
+    
+    st.write(f"DEBUG - After fix: {latex_str[:200]}")
+    
     return latex_str
+
+# Quick test to verify LaTeX rendering works
+with st.expander("🔧 LaTeX Test (click to expand)", expanded=False):
+    st.write("Testing if LaTeX renders...")
+    st.latex(r"E = mc^2")
+    st.write("If you see E = mc² above, LaTeX works! If you see raw code, there's a problem with your Streamlit setup.")
 
 # Streamlit layout
 st.header("Water Overflow Design for Steel Roofs")
