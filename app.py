@@ -25,24 +25,22 @@ def fix_latex(latex_str):
     if latex_str is None:
         return latex_str
     
-    # Debug: show what we received
-    st.write(f"DEBUG - Type: {type(latex_str)}")
-    st.write(f"DEBUG - First 200 chars: {str(latex_str)[:200]}")
-    
     # Convert to string if needed
     latex_str = str(latex_str)
     
-    # Fix \& to & for alignment
-    latex_str = latex_str.replace(r'\&', '&')
+    # Remove $$ delimiters that handcalcs adds (Streamlit doesn't want them)
+    latex_str = latex_str.replace('$$', '').strip()
+    
+    # Fix \& to & for alignment  
+    latex_str = latex_str.replace('\\&', '&')
     
     # Fix math.pi references  
-    latex_str = latex_str.replace(r'\mathrm{math.pi}', r'\pi')
-    latex_str = latex_str.replace(r'math.pi', r'\pi')
+    latex_str = latex_str.replace('\\mathrm{math.pi}', '\\pi')
+    latex_str = latex_str.replace('math.pi', '\\pi')
     
-    # handcalcs uses ; \ as separator between equations - replace with \\
-    latex_str = latex_str.replace(r' ; \ ', r' \\ ')
-    
-    st.write(f"DEBUG - After fix: {latex_str[:200]}")
+    # handcalcs uses ' ; \ ' as separator - the backslash is literal
+    # Replace semicolon with double backslash for line break
+    latex_str = latex_str.replace(' ; ', ' \\\\ ')
     
     return latex_str
 
