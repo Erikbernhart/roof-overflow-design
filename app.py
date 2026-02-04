@@ -19,17 +19,22 @@ from main import (
     factored_equivalent_load,
 )
 
-# Function to fix LaTeX strings
+# Function to fix LaTeX strings from handcalcs
 def fix_latex(latex_str):
-    """Fix common LaTeX syntax errors"""
+    """Fix common LaTeX syntax errors from handcalcs decorator"""
     if latex_str is None:
         return latex_str
     
-    # Fix \&= to &=
-    latex_str = latex_str.replace(r'\&=', '&=')
+    # Fix \& to & for alignment
     latex_str = latex_str.replace(r'\&', '&')
     
-    # Fix math.pi references
+    # Fix semicolons followed by backslash (handcalcs uses ; \ for line breaks)
+    latex_str = latex_str.replace(r' ; \ ', r' \\ ')
+    
+    # Remove trailing \ before \end{aligned}
+    latex_str = latex_str.replace(r' \ \end{aligned}', r' \end{aligned}')
+    
+    # Fix math.pi references  
     latex_str = latex_str.replace(r'\mathrm{math.pi}', r'\pi')
     latex_str = latex_str.replace(r'math.pi', r'\pi')
     
