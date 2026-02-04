@@ -32,11 +32,6 @@ def fix_latex(latex_str):
     # Fix math.pi references
     latex_str = latex_str.replace(r'\mathrm{math.pi}', r'\pi')
     latex_str = latex_str.replace(r'math.pi', r'\pi')
-    latex_str = latex_str.replace(r'\left( \pi \right)', r'\pi')
-    
-    # Clean up excessive spaces and parentheses around simple numbers
-    import re
-    latex_str = re.sub(r'\\\left\(\s*(\d+)\s*\\\right\)\s*\^\{\s*(\d+)\s*\}', r'\1^{\2}', latex_str)
     
     return latex_str
 
