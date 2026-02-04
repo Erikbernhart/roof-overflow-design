@@ -44,11 +44,6 @@ def fix_latex(latex_str):
     
     return latex_str
 
-# Quick test to verify LaTeX rendering works
-with st.expander("🔧 LaTeX Test (click to expand)", expanded=False):
-    st.write("Testing if LaTeX renders...")
-    st.latex(r"E = mc^2")
-    st.write("If you see E = mc² above, LaTeX works! If you see raw code, there's a problem with your Streamlit setup.")
 
 # Streamlit layout
 st.header("Water Overflow Design for Steel Roofs")
